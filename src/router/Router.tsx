@@ -6,6 +6,7 @@ import {navigationRef} from './navigationService';
 import SignupScreen from '../screens/SignupScreen';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Define types for navigation parameters
 type LoginStackParamList = {
@@ -47,8 +48,30 @@ const loginStack = () => {
 
 const tabbarStack = () => {
   return (
-    <TabStack.Navigator>
-      <TabStack.Screen name="HomeScreen" component={HomeScreen} />
+    <TabStack.Navigator
+      screenOptions={({route}: any) => ({
+        tabBarIcon: ({focused, color, size}) => {
+          let iconName: string;
+
+          if (route.name === 'HomeScreen') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          } else {
+            iconName = 'help-outline'; // Default icon if route is not recognized
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: 'tomato',
+        tabBarInactiveTintColor: 'gray',
+        tabBarStyle: {display: 'flex'}, // Ensure the tab bar is displayed
+      })}>
+      <TabStack.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{headerShown: true, title: 'Home'}}
+      />
       {/* <TabStack.Screen name="Settings" component={SettingsScreen} /> */}
     </TabStack.Navigator>
   );
@@ -62,7 +85,11 @@ const Router: React.FC = () => {
           component={loginStack}
           options={{headerShown: false}}
         />
-        <MainStack.Screen name="TabStackParamList" component={tabbarStack} />
+        <MainStack.Screen
+          name="TabStackParamList"
+          component={tabbarStack}
+          options={{headerShown: false}}
+        />
       </MainStack.Navigator>
     </NavigationContainer>
   );

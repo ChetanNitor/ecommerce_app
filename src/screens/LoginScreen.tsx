@@ -1,82 +1,109 @@
-// Login.tsx
-import React, {useCallback, useState} from 'react';
-import {View} from 'react-native';
-import {Button, Snackbar, TextInput, Title} from 'react-native-paper';
-import loginStyles from './LoginStyle';
-import {navigate} from '../router/navigationService';
+import {Button, Input, Text} from '@rneui/themed';
+import {Formik} from 'formik';
+import React from 'react';
+import {Alert, KeyboardAvoidingView, Platform, View} from 'react-native';
+import * as Yup from 'yup';
+import {navigate, replace} from '../router/navigationService';
+import styles from './LoginScreen.styles';
+
+// Validation schema using Yup
+const validationSchema = Yup.object({
+  username: Yup.string().required('Username is required'),
+  password: Yup.string().required('Password is required'),
+});
 
 const LoginScreen: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
-
-  const handleLogin = useCallback(() => {
-    // Perform login logic
-    if (username && password) {
-      // Simulate a successful login (replace with actual login logic)
-      setSnackbarMessage('Login successful!');
-      setSnackbarVisible(true);
-      navigate('TabStackParamList');
-    } else {
-      setSnackbarMessage('Please enter both username and password.');
-      setSnackbarVisible(true);
-    }
-  }, [username, password]);
-
-  const handleSignup = useCallback(() => {
-    navigate('SignupScreen');
-  }, []);
-
-  const handleForgotPassword = useCallback(() => {
-    // Handle forgot password logic
-    setSnackbarMessage('Navigating to forgot password...');
-    setSnackbarVisible(true);
-  }, []);
-
-  const onDismissSnackbar = useCallback(() => {
-    setSnackbarVisible(false);
-  }, []);
+  const handleLogin = (values: {username: string; password: string}) => {
+    Alert.alert(
+      'Login',
+      `Username: ${values.username}, Password: ${values.password}`,
+    );
+    replace('TabStackParamList');
+  };
 
   return (
-    <View style={loginStyles.container}>
-      <Title>Login</Title>
-      <TextInput
-        label="Username"
-        value={username}
-        onChangeText={setUsername}
-        style={loginStyles.input}
-        mode="outlined"
-        autoCapitalize="none"
-      />
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        style={loginStyles.input}
-        mode="outlined"
-        secureTextEntry
-      />
-      <Button mode="contained" onPress={handleLogin} style={loginStyles.button}>
-        Login
-      </Button>
-      <Button mode="outlined" onPress={handleSignup} style={loginStyles.button}>
-        Sign Up
-      </Button>
-      <Button
-        mode="text"
-        onPress={handleForgotPassword}
-        style={loginStyles.button}>
-        Forgot Password?
-      </Button>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={styles.innerContainer}>
+        <Text h3 style={styles.title}>
+          Login
+        </Text>
+        <Formik
+          initialValues={{username: '', password: ''}}
+          validationSchema={validationSchema}
+          onSubmit={handleLogin}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+          }) => (
+            <>
+              <Input
+                placeholder="Username"
+                leftIcon={{type: 'font-awesome', name: 'user'}}
+                value={values.username}
+                onChangeText={handleChange('username')}
+                onBlur={handleBlur('username')}
+                autoCapitalize="none"
+                autoComplete="username"
+                keyboardType="email-address"
+                containerStyle={styles.inputContainer}
+                errorStyle={{color: 'red'}}
+                errorMessage={
+                  touched.username && errors.username ? errors.username : ''
+                }
+              />
+              <Input
+                placeholder="Password"
+                leftIcon={{type: 'font-awesome', name: 'key'}}
+                value={values.password}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="password"
+                containerStyle={styles.inputContainer}
+                errorStyle={{color: 'red'}}
+                errorMessage={
+                  touched.password && errors.password ? errors.password : ''
+                }
+              />
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={onDismissSnackbar}
-        duration={2000}>
-        {snackbarMessage}
-      </Snackbar>
-    </View>
+              <Button
+                title="Login"
+                onPress={() => handleSubmit()}
+                buttonStyle={styles.loginButton}
+                containerStyle={styles.buttonContainer}
+              />
+
+              <Button
+                title="Forgot Password?"
+                type="clear"
+                onPress={() =>
+                  Alert.alert(
+                    'Forgot Password',
+                    'Redirecting to password recovery...',
+                  )
+                }
+                titleStyle={styles.forgotPasswordText}
+              />
+
+              <Button
+                title="Sign Up"
+                type="outline"
+                onPress={() => navigate('SignupScreen')}
+                buttonStyle={styles.signupButton}
+                containerStyle={styles.buttonContainer}
+              />
+            </>
+          )}
+        </Formik>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

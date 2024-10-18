@@ -1,152 +1,179 @@
-// Signup.tsx
-import React, {useState, useCallback} from 'react';
-import {View, Text} from 'react-native';
-import {TextInput, Button, Title, Snackbar} from 'react-native-paper';
-import signupStyles from './SignupStyle';
+import {Picker} from '@react-native-picker/picker';
+import {Icon} from '@rneui/base';
+import {Button, Input, Text} from '@rneui/themed';
+import {Formik} from 'formik';
+import React from 'react';
+import {Alert, KeyboardAvoidingView, Platform, View} from 'react-native';
+import * as Yup from 'yup';
+import styles from './SignupScreen.styles';
+
+// Validation schema using Yup
+const validationSchema = Yup.object({
+  firstName: Yup.string().required('First name is required'),
+  lastName: Yup.string().required('Last name is required'),
+  city: Yup.string().required('City is required'),
+  username: Yup.string().required('Username is required'),
+  password: Yup.string().required('Password is required'),
+});
 
 const SignupScreen: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-
-  // State to manage error messages
-  const [errors, setErrors] = useState<{
-    username: string;
+  const handleSignup = (values: {
     firstName: string;
     lastName: string;
     city: string;
+    username: string;
     password: string;
-  }>({
-    username: '',
-    firstName: '',
-    lastName: '',
-    city: '',
-    password: '',
-  });
-
-  const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
-
-  const handleSignup = useCallback(() => {
-    // Clear previous errors
-    setErrors({
-      username: '',
-      firstName: '',
-      lastName: '',
-      city: '',
-      password: '',
-    });
-
-    let valid = true;
-
-    // Validate inputs
-    if (!username) {
-      setErrors(prev => ({...prev, username: 'Username is required.'}));
-      valid = false;
-    }
-    if (!firstName) {
-      setErrors(prev => ({...prev, firstName: 'First Name is required.'}));
-      valid = false;
-    }
-    if (!lastName) {
-      setErrors(prev => ({...prev, lastName: 'Last Name is required.'}));
-      valid = false;
-    }
-    if (!city) {
-      setErrors(prev => ({...prev, city: 'City is required.'}));
-      valid = false;
-    }
-    if (!password) {
-      setErrors(prev => ({...prev, password: 'Password is required.'}));
-      valid = false;
-    }
-
-    if (valid) {
-      setSnackbarMessage('Signup successful!');
-      setSnackbarVisible(true);
-    } else {
-      setSnackbarMessage('Please fill all mandatory fields.');
-      setSnackbarVisible(true);
-    }
-  }, [username, firstName, lastName, city, password]);
-
-  const onDismissSnackbar = useCallback(() => {
-    setSnackbarVisible(false);
-  }, []);
+  }) => {
+    Alert.alert(
+      'Signup',
+      `First Name: ${values.firstName}, Last Name: ${values.lastName}, City: ${values.city}, Username: ${values.username}, Password: ${values.password}`,
+    );
+  };
 
   return (
-    <View style={signupStyles.container}>
-      <Title>Sign Up</Title>
-      <TextInput
-        label="Username*"
-        value={username}
-        onChangeText={setUsername}
-        style={signupStyles.input}
-        mode="outlined"
-      />
-      {errors.username ? (
-        <Text style={signupStyles.error}>{errors.username}</Text>
-      ) : null}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={styles.innerContainer}>
+        <Text h3 style={styles.title}>
+          Sign Up
+        </Text>
+        <Formik
+          initialValues={{
+            firstName: '',
+            lastName: '',
+            city: '',
+            username: '',
+            password: '',
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSignup}>
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            setFieldValue,
+            values,
+            errors,
+            touched,
+          }) => (
+            <>
+              {/* First Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>First Name</Text>
+                <Input
+                  placeholder="First Name"
+                  inputStyle={styles.inputField}
+                  leftIcon={{type: 'font-awesome', name: 'user'}}
+                  value={values.firstName}
+                  onChangeText={handleChange('firstName')}
+                  onBlur={handleBlur('firstName')}
+                  errorStyle={styles.errorText}
+                  errorMessage={
+                    touched.firstName && errors.firstName
+                      ? errors.firstName
+                      : ''
+                  }
+                  autoCorrect={false}
+                  autoComplete="off"
+                />
+              </View>
 
-      <TextInput
-        label="First Name*"
-        value={firstName}
-        onChangeText={setFirstName}
-        style={signupStyles.input}
-        mode="outlined"
-      />
-      {errors.firstName ? (
-        <Text style={signupStyles.error}>{errors.firstName}</Text>
-      ) : null}
+              {/* Last Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Last Name</Text>
+                <Input
+                  placeholder="Last Name"
+                  inputStyle={styles.inputField}
+                  leftIcon={{type: 'font-awesome', name: 'user'}}
+                  value={values.lastName}
+                  onChangeText={handleChange('lastName')}
+                  onBlur={handleBlur('lastName')}
+                  errorStyle={styles.errorText}
+                  errorMessage={
+                    touched.lastName && errors.lastName ? errors.lastName : ''
+                  }
+                />
+              </View>
 
-      <TextInput
-        label="Last Name*"
-        value={lastName}
-        onChangeText={setLastName}
-        style={signupStyles.input}
-        mode="outlined"
-      />
-      {errors.lastName ? (
-        <Text style={signupStyles.error}>{errors.lastName}</Text>
-      ) : null}
+              {/* City Dropdown */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>City</Text>
+                <View style={styles.pickerWrapper}>
+                  <Icon
+                    name="map-marker"
+                    type="font-awesome"
+                    size={20}
+                    containerStyle={styles.icon}
+                  />
+                  <Picker
+                    selectedValue={values.city}
+                    style={styles.picker}
+                    onValueChange={itemValue =>
+                      setFieldValue('city', itemValue)
+                    }>
+                    <Picker.Item label="Select City" value="" />
+                    <Picker.Item label="New York" value="New York" />
+                    <Picker.Item label="Los Angeles" value="Los Angeles" />
+                    <Picker.Item label="Chicago" value="Chicago" />
+                  </Picker>
+                </View>
+                {touched.city && errors.city ? (
+                  <Text style={styles.errorText}>{errors.city}</Text>
+                ) : null}
+              </View>
 
-      <TextInput
-        label="City*"
-        value={city}
-        onChangeText={setCity}
-        style={signupStyles.input}
-        mode="outlined"
-      />
-      {errors.city ? <Text style={signupStyles.error}>{errors.city}</Text> : null}
+              {/* Username Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Username</Text>
+                <Input
+                  placeholder="Username"
+                  inputStyle={styles.inputField}
+                  leftIcon={{type: 'font-awesome', name: 'user'}}
+                  value={values.username}
+                  onChangeText={handleChange('username')}
+                  onBlur={handleBlur('username')}
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  errorStyle={styles.errorText}
+                  errorMessage={
+                    touched.username && errors.username ? errors.username : ''
+                  }
+                />
+              </View>
 
-      <TextInput
-        label="Password*"
-        value={password}
-        onChangeText={setPassword}
-        style={signupStyles.input}
-        mode="outlined"
-        secureTextEntry
-      />
-      {errors.password ? (
-        <Text style={signupStyles.error}>{errors.password}</Text>
-      ) : null}
+              {/* Password Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <Input
+                  placeholder="Password"
+                  inputStyle={styles.inputField}
+                  leftIcon={{type: 'font-awesome', name: 'key'}}
+                  value={values.password}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoComplete="password"
+                  errorStyle={styles.errorText}
+                  errorMessage={
+                    touched.password && errors.password ? errors.password : ''
+                  }
+                />
+              </View>
 
-      <Button
-        mode="contained"
-        onPress={handleSignup}
-        style={signupStyles.button}>
-        Sign Up
-      </Button>
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={onDismissSnackbar}
-        duration={2000}>
-        {snackbarMessage}
-      </Snackbar>
-    </View>
+              {/* Submit Button */}
+              <Button
+                title="Submit"
+                onPress={() => handleSubmit()}
+                buttonStyle={styles.signupButton}
+                containerStyle={styles.buttonContainer}
+              />
+            </>
+          )}
+        </Formik>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
